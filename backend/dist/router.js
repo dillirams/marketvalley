@@ -54,6 +54,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const middleware_1 = require("./middleware");
 const JWT_SECRET = "ajfldakaksfo";
 const multer_1 = __importDefault(require("multer"));
+const util_1 = require("./util");
 exports.userRouter = (0, express_1.Router)();
 const requestBody = zod_1.default.object({
     username: (0, zod_1.string)().min(4).max(8),
@@ -136,6 +137,9 @@ const upload = (0, multer_1.default)({ storage: storage });
 exports.userRouter.post("/shop", middleware_1.authentication, upload.single('file'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(req.body);
     const { shopname, address, description, category } = req.body;
+    let newadress = JSON.parse(address);
+    const response = yield fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${newadress.latitude}&lon=${newadress.longitude}`);
+    const data = yield response.json();
     const file = req.file;
     //@ts-ignore
     const userId = req.id;
@@ -151,7 +155,9 @@ exports.userRouter.post("/shop", middleware_1.authentication, upload.single('fil
     try {
         yield db_1.shopModel.create({
             shopName: shopname,
-            address: address,
+            address: data.display_name,
+            latitude: newadress.latitude,
+            longitude: newadress.longitude,
             description: description,
             image: file === null || file === void 0 ? void 0 : file.originalname,
             category: category,
@@ -182,3 +188,77 @@ exports.userRouter.get('/shop', middleware_1.authentication, (req, res) => __awa
         });
     }
 }));
+exports.userRouter.post("/additems/:id", middleware_1.authentication, upload.single('file'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const shopId = req.params.id;
+    const itemInfo = req.body;
+    const image = req.file;
+    try {
+        yield db_1.productModel.create({
+            name: itemInfo.name,
+            photo: image === null || image === void 0 ? void 0 : image.originalname,
+            price: itemInfo.price,
+            details: itemInfo.description,
+            shopId: shopId
+        });
+        res.status(200).json({
+            message: "item added successfully"
+        });
+    }
+    catch (e) {
+        res.status(400).json({
+            message: "something went wrong",
+        });
+    }
+}));
+exports.userRouter.get("/viewitems/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const shopId = req.params.id;
+    try {
+        const items = yield db_1.productModel.find({
+            shopId: shopId
+        });
+        console.log(items);
+        res.status(200).json({
+            message: "item fetched successfully",
+            items: items
+        });
+    }
+    catch (e) {
+        console.log(e);
+        res.status(400).json({
+            message: "something went wrong"
+        });
+    }
+}));
+exports.userRouter.post("/searchItem", function (req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { currentLocation, viewitem } = req.body;
+        try {
+            let availableProduct = yield db_1.productModel.find({
+                name: { $regex: viewitem, $options: 'i' } // 'i' for case-insensitive
+            });
+            let shops = [];
+            for (const item of availableProduct) {
+                let shop = yield db_1.shopModel.findOne({
+                    _id: item.shopId
+                });
+                shops.push(shop);
+            }
+            let newShop = [];
+            for (const shop of shops) {
+                //@ts-ignore
+                let distance = (0, util_1.getDistanceInMeters)(shop === null || shop === void 0 ? void 0 : shop.latitude, shop === null || shop === void 0 ? void 0 : shop.longitude, currentLocation.latitude, currentLocation.longitude);
+                console.log(distance);
+                if (distance < 102) {
+                    newShop.push(shop);
+                }
+            }
+            console.log(newShop);
+            res.status(200).json({
+                shops: newShop,
+            });
+        }
+        catch (error) {
+            console.log(error);
+        }
+    });
+});

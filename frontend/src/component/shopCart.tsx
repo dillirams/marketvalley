@@ -7,8 +7,8 @@ interface cardProp {
   name: string;
   rating?: number;
   reviews?: number,
-  address:string
- 
+  address:string,
+  onClick?:()=>void
 }
 export default function ShopCart(props: cardProp) {
   return (
@@ -30,7 +30,7 @@ export default function ShopCart(props: cardProp) {
           <div className="text-gray-500">5 reviews</div>
         </div>
         <div className="flex font-semibold">{props.address}</div>
-        <Button variant="primary" size="md" title="visit shop" />
+        <Button variant="primary" size="md" title="visit shop" onClick={props.onClick}/>
       </div>
     </div>
   );

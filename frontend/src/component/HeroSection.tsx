@@ -23,7 +23,9 @@ export default function HeroSection() {
               variant="primary"
               onClick={() => navigate("/searchItem")}
             />
-            <Button title="Search Shop" size="md" variant="secondary" />
+            <Button onClick={()=>{
+              navigate("/shoplist")
+            }} title="Search Shop" size="md" variant="secondary" />
           </div>
         </div>
         <div className="flex flex-col p-3 m-2 gap-3 text-xl">

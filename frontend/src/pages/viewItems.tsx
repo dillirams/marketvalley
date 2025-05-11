@@ -1,25 +1,26 @@
 import { useEffect, useState } from "react";
 import  Button  from "../component/Button";
 import { Plus } from "../component/icon/plus";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Card from "../component/Card";
 import ShopCart from "../component/shopCart";
 import axios from "axios";
 import { useContent } from "../hooks/useFetch";
+import { items } from "../store/atom";
 
 
 
-export function Dashboard(){
-        const navigate=useNavigate()
-    
-    
-    function createShop(){
-       navigate('/createshop')
+export function ViewItems(){
+   const {id}=useParams();
+    const content=useContent(`http://localhost:3000/user/viewitems/${id}`,"items")
+
+       const navigate=useNavigate();
+       
+    function addItems(){
+        navigate(`/additems/${id}`)
     }
-    
-    const content=useContent('http://localhost:3000/user/shop',"shop");
-    console.log(content);
-    
+
+
    
     return <div className="flex flex-col items-center">
     <div className="bg-gray-300 w-full flex justify-around px-3">
@@ -30,13 +31,11 @@ export function Dashboard(){
             
         </div>
         <div className="flex justify-center items-center">
-            <Button variant="primary" size="lg" title="open shop "  startIcon={<Plus/>} onClick={createShop}/>
+            <Button variant="primary" size="lg" title="Add Items "  startIcon={<Plus/>} onClick={addItems}/>
         </div>
     </div>
-    <div className="grid w-3/5 sm:grid-cols-2 md:grid-cols-3">
-       {content.map(({shopName,image,address,_id})=>(<ShopCart name={shopName} image={`http://localhost:3000/images/${image}`} address={address} onClick={()=>{
-         navigate(`/viewItems/${_id}`)
-       }} />))}
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 justify-center">
+       {content.map(({name,photo,price, description})=>(<ShopCart name={name} image={`http://localhost:3000/images/${photo}`} address={description} />))}
     </div>
     </div>
     

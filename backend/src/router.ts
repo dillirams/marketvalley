@@ -1,12 +1,13 @@
 
 import { Router } from "express";
 import zod, { string } from 'zod'
-import { shopModel, userModel } from "./db";
+import { productModel, shopModel, userModel } from "./db";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { authentication } from "./middleware";
 const JWT_SECRET="ajfldakaksfo"
 import multer from "multer";
+import { getDistanceInMeters } from "./util";
 
 export const userRouter=Router();
 
@@ -104,6 +105,11 @@ const storage = multer.diskStorage({
 userRouter.post("/shop",authentication, upload.single('file'), async(req,res)=>{
   console.log(req.body);
     const {shopname,address,description,category}=req.body;
+    let newadress=JSON.parse(address);
+     const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${newadress.latitude}&lon=${newadress.longitude}`
+      );
+       const data = await response.json();
     const file=req.file
     
     //@ts-ignore
@@ -120,7 +126,9 @@ userRouter.post("/shop",authentication, upload.single('file'), async(req,res)=>{
     try{
         await shopModel.create({
             shopName:shopname,
-            address:address,
+            address:data.display_name,
+            latitude:newadress.latitude,
+            longitude:newadress.longitude,
             description:description,
             image:file?.originalname,
             category:category,
@@ -140,7 +148,7 @@ userRouter.post("/shop",authentication, upload.single('file'), async(req,res)=>{
 })
 
 
-userRouter.get('/shop',authentication, async(req,res)=>{
+userRouter.get('/shop',authentication,  async(req,res)=>{
     try{
         const shop=await shopModel.find({
 
@@ -156,3 +164,83 @@ userRouter.get('/shop',authentication, async(req,res)=>{
     
 })
 
+userRouter.post("/additems/:id",authentication, upload.single('file'), async(req,res)=>{
+    const shopId=req.params.id;
+    const itemInfo=req.body;
+    const image=req.file;
+    
+    try{
+        await productModel.create({
+           name:itemInfo.name,
+           photo:image?.originalname,
+           price:itemInfo.price,
+           details:itemInfo.description,
+           shopId:shopId
+        })
+        res.status(200).json({
+            message:"item added successfully"
+        })
+        
+    }catch(e){
+        
+        res.status(400).json({
+            message:"something went wrong",
+
+        })
+    }
+})
+
+userRouter.get("/viewitems/:id", async(req,res)=>{
+    const shopId=req.params.id;
+    
+    try{
+       const items= await productModel.find({
+           shopId:shopId
+        })
+        console.log(items);
+        res.status(200).json({
+            message:"item fetched successfully",
+            items:items
+        })
+    }catch(e){
+        console.log(e);
+        res.status(400).json({
+        
+            message:"something went wrong"
+        })
+    }
+})
+
+userRouter.post("/searchItem",async function (req,res) {
+    const {currentLocation,viewitem}=req.body;
+    try {
+       let availableProduct = await productModel.find({
+  name: { $regex: viewitem, $options: 'i' } // 'i' for case-insensitive
+});
+
+        let shops=[]
+        for (const item of availableProduct) {
+            let shop= await shopModel.findOne({
+                _id:item.shopId
+            })
+            shops.push(shop)
+        }
+        let newShop=[]
+        for (const shop of shops) {
+            //@ts-ignore
+            let distance= getDistanceInMeters(shop?.latitude,shop?.longitude,currentLocation.latitude,currentLocation.longitude)
+            console.log(distance);
+            if (distance<102) {
+                newShop.push(shop)
+            }
+        }
+        console.log(newShop);
+        res.status(200).json({
+            shops:newShop,
+            
+        })
+    } catch (error) {
+        console.log(error);
+        
+    }
+})

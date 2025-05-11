@@ -39,7 +39,7 @@ export default function NavBar() {
           <span className="text-3xl font-bold text-green-400">Valley</span>
         </div>
         <div className="hidden md:block md:flex md:flex-wrap md:justify-center md:gap-2 md:p-2">
-          <NavItem navigate="home" title="Home" size="lg" variant="primary" />
+          <NavItem navigate="" title="Home" size="lg" variant="primary" />
           <NavItem
             navigate="aboutUs"
             title="About us"

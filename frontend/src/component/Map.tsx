@@ -8,6 +8,8 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import Button from "./Button";
+import { useRecoilState } from "recoil";
+import { locationatom } from "../store/atom";
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -19,7 +21,7 @@ const LocationPicker: React.FC = () => {
   const [showMap, setShowMap] = useState(false);
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [address, setAddress] = useState<string>("");
-
+  const [currentLocation,setCurrentLocation]=useRecoilState(locationatom)
   // Reverse geocode using OpenStreetMap Nominatim API
   const fetchAddress = async (lat: number, lon: number) => {
     try {
@@ -40,6 +42,9 @@ const LocationPicker: React.FC = () => {
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setPosition([latitude, longitude]);
+        setCurrentLocation({
+          latitude,longitude
+        })
         fetchAddress(latitude, longitude);
       },
       (err) => {
@@ -63,7 +68,7 @@ const LocationPicker: React.FC = () => {
 
   return (
     <div className="flex flex-wrap justify-center md:flex-col md:items-start">
-      //@ts-ignore
+      
       <Button
         onClick={() => setShowMap(!showMap)}
         variant="primary"

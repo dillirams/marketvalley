@@ -3,7 +3,8 @@ interface InputProps{
     register?:any
     placeholder:string,
     type:string,
-    error?:string
+    error?:string,
+    onChange?:()=>void
     
 }
 

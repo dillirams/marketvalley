@@ -1,15 +1,15 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-export function useContent(){
+export function useContent(url:string,resType:string){
     const[content, setContent]=useState([]);
 async function  getContent() {
-    const response= await axios.get('http://localhost:3000/user/shop',{
+    const response= await axios.get(url,{
         headers:{
             "token":localStorage.getItem("token")
         }
     })
-    setContent(response.data.shop)
+    setContent(response.data[resType])
 }
     
 

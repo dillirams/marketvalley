@@ -3,6 +3,8 @@ import express from 'express'
 import mongoose from 'mongoose'
 import cors from 'cors'
 import multer from 'multer'
+import dotenv from 'dotenv'
+dotenv.config();
 import { userRouter } from './router';
 
 const app=express();
@@ -12,7 +14,10 @@ app.use("/images",express.static("uploads/"))
 app.use('/user',userRouter)
 
 async function main() {
-    await mongoose.connect("mongodb+srv://root:dilli03@cluster0.zuems.mongodb.net/marketvalley")
+    if(!process.env.MONGODB_URL){
+         throw new Error("MOGODB_URL is not defined in the environment variables");
+    }
+    await mongoose.connect(process.env.MONGODB_URL )
     app.listen(3000,()=>{
         console.log("the app is listening to port 3000")
     })

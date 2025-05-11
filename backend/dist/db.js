@@ -18,6 +18,8 @@ const userSchema = new mongoose_2.Schema({
 const shopSchema = new mongoose_2.Schema({
     shopName: String,
     address: String,
+    latitude: Number,
+    longitude: Number,
     description: String,
     image: String,
     category: String,

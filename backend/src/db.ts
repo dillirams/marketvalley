@@ -2,6 +2,10 @@ import mongoose from 'mongoose'
 
 import { Schema } from 'mongoose'
 
+interface AddressType{
+    latitude:number,
+    longitude:number
+}
 const userSchema=new Schema({
     uername:String,
     email:String,
@@ -17,6 +21,8 @@ const userSchema=new Schema({
 const shopSchema=new Schema({
     shopName:String,
     address:String,
+    latitude:Number,
+    longitude:Number,
     description:String,
     image:String,
     category:String,

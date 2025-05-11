@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const router_1 = require("./router");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
@@ -23,7 +25,10 @@ app.use("/images", express_1.default.static("uploads/"));
 app.use('/user', router_1.userRouter);
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield mongoose_1.default.connect("mongodb+srv://root:dilli03@cluster0.zuems.mongodb.net/marketvalley");
+        if (!process.env.MONGODB_URL) {
+            throw new Error("MOGODB_URL is not defined in the environment variables");
+        }
+        yield mongoose_1.default.connect(process.env.MONGODB_URL);
         app.listen(3000, () => {
             console.log("the app is listening to port 3000");
         });
